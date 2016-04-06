@@ -2572,9 +2572,6 @@ mainframe = Tk()
 screenWidth,screenHeight=mainframe.winfo_screenwidth(),mainframe.winfo_screenheight()
 
 # Resolution
-print screenWidth, screenHeight
-
-
 useLowerResolution = 0
 canvasW = 1100
 canvasH = 700
@@ -2588,9 +2585,7 @@ if screenWidth <= 1400:
 if screenHeight <= 800:
     canvasH = 550
     useLowerResolution = 1
-
-canvasW = 550
-canvasH = 550    
+     
 mainframe.geometry("%dx%d+0+0" % (screenWidth, screenHeight-100))
 
 
