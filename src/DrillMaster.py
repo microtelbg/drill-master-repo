@@ -1338,7 +1338,7 @@ def izberi_skorost(skorostMap, instrument):
             break
     return skorost
         
-def izberi_instrument(instrMap, diametur, zaFiks):    
+def izberi_instrument(instrMap, diametur, zaFiks, zaDibla):    
     instT = 'INVALID'
     
     # Ako probivame fiksove i diameturka na T6 i T7 sa ravni, izberi T11 (2 instrumenta zaedno)
@@ -1369,7 +1369,7 @@ def napravi_comment_za_polojenieto(side):
         
     return polojenie   
 
-def ima_li_lipsvash_instrument(verGlavaInst, horGlavaInst):  
+def ima_li_lipsvash_instrument(horGlavaInst):  
     if len(dupki_za_gcode_left) > 0:
         for dupka in dupki_za_gcode_left:
             diam = dupka['r']*2
@@ -1377,20 +1377,12 @@ def ima_li_lipsvash_instrument(verGlavaInst, horGlavaInst):
                 if not diam in horGlavaInst.values():
                     print 'lipsva horizontalna glava'
                     return diam
-            else:
-                if not diam in verGlavaInst.values():
-                    print 'lipsva vertikalna glava'
-                    return diam
         
         for dupka in dupki_za_gcode_right:
             diam = dupka['r']*2
             if dupka['t'] == 1:
                 if not diam in horGlavaInst.values():
                     print 'lipsva horizontalna glava'
-                    return diam
-            else:
-                if not diam in verGlavaInst.values():
-                    print 'lipsva vertikalna glava'
                     return diam
             
         return 0    
@@ -1401,10 +1393,9 @@ def suzdai_gcode_file():
     global TT 
     global gcodeInProgress    
     bezopasno_z = "{0:.3f}".format(50.000) # Tova she bude izchesleno kato debelinata na materiala ot bxf + 20
-    instrumentiZaVerGlava = definirai_instrumenti('V')
     instrumentiZaHorizGlava = definirai_instrumenti('H')
     
-    lispvashDiametur = ima_li_lipsvash_instrument(instrumentiZaVerGlava, instrumentiZaHorizGlava)
+    lispvashDiametur = ima_li_lipsvash_instrument(instrumentiZaHorizGlava)
     if lispvashDiametur > 0:
         iztrii_temp_gcode_file()
         msgLipsInst = u'Липсва инструмент с диаметър: '+str(lispvashDiametur)+ u' мм. Поставете липсващия инструмент и генерирайте кода отново.'
@@ -1418,7 +1409,7 @@ def suzdai_gcode_file():
 
     # Stoinosti na g-code (horizontalni otvori, vertikalni, pause, ciklichno)
     napraviHorizontalniOtvori = genHorizontOtvoriGCodeValue.get()
-    napraviVertiklaniOtvori = genDibliGCodeValue.get()
+    napraviGCodeZaDibli = genDibliGCodeValue.get()
     postaviPausa = pauseMejduDetailiGCodeValue.get()
     
     # Koga samo da dobavi vs. koga e nov file i ima comments on top     
@@ -1440,9 +1431,7 @@ def suzdai_gcode_file():
         n10 = 30
         
     leftHorizontDupkiNeOpt = []
-    leftVertikalDupkiNeOpt = []
     rightHorizontDupkiNeOpt = []
-    rightVertikalDupkiNeOpt = [] 
     
     ''' COMENTARI '''
     # Tova e samo za komentar v g-code za da vidq koq sled koq dupka se dupchi
@@ -1453,13 +1442,6 @@ def suzdai_gcode_file():
         if dupka['t'] == 1:
             if napraviHorizontalniOtvori == 1 and dupka['y']== 0:
                 leftHorizontDupkiNeOpt.append(dupka)
-#                 dupkaLine = "(Horizontalen otvor: " + 'X:'+ str(dupka['x']) + ', Y:' + str(dupka['y']) +', R:'+ str(dupka['r']) + ', H:'+str(dupka['h'])+')\n'
-#                 fw.write(dupkaLine)
-        else:
-            if napraviVertiklaniOtvori == 1:
-                leftVertikalDupkiNeOpt.append(dupka)
-#                 dupkaLine = "(Vertikalen otvor: " + 'X:'+ str(dupka['x']) + ', Y:' + str(dupka['y']) +', R:'+ str(dupka['r']) + ', H:'+str(dupka['h'])+')\n'
-#                 fw.write(dupkaLine)
     
     if len(dupki_za_gcode_right) > 0:
 #         fw.write('(Dqsna Baza Otvori:)\n')     
@@ -1468,19 +1450,8 @@ def suzdai_gcode_file():
         if dupka['t'] == 1:
             if napraviHorizontalniOtvori == 1 and dupka['y']== 0:
                 rightHorizontDupkiNeOpt.append(dupka)
-#                 dupkaLine = "(Horizontalen otvor: " + 'X:'+ str(dupka['x']) + ', Y:' + str(dupka['y']) +', R:'+ str(dupka['r']) + ', H:'+str(dupka['h'])+')\n'
-#                 fw.write(dupkaLine)   
-        else:
-            if napraviVertiklaniOtvori == 1:
-                rightVertikalDupkiNeOpt.append(dupka)      
-#                 dupkaLine = "(Vertikalen otvor: " + 'X:'+ str(dupka['x']) + ', Y:' + str(dupka['y']) +', R:'+ str(dupka['r']) + ', H:'+str(dupka['h'])+')\n'
-#                 fw.write(dupkaLine)   
     
     #Optimizacia
-    if len(leftVertikalDupkiNeOpt) > 0:
-        leftVertikalDupki = optimizirai_otvori(leftVertikalDupkiNeOpt)
-    else:
-        leftVertikalDupki = []
     if len(leftHorizontDupkiNeOpt) > 0:
         leftHorizontDupki = optimizirai_otvori(leftHorizontDupkiNeOpt)
     else:
@@ -1489,39 +1460,28 @@ def suzdai_gcode_file():
         rightHorizontDupki = optimizirai_otvori(rightHorizontDupkiNeOpt)
     else:
         rightHorizontDupki = []
-    if len(rightVertikalDupkiNeOpt) > 0:
-        rightVertikalDupki = optimizirai_otvori(rightVertikalDupkiNeOpt)
-    else:
-        rightVertikalDupki = []
     
     # Nameri instrument za purvata dupka
     razmerNachalnaDupka = 0
     typeHiliV =  'H'
     if napraviHorizontalniOtvori == 1 and len(leftHorizontDupki) > 0:
         dup = leftHorizontDupki[0]
-        razmerNachalnaDupka = dup['r']*2      
-    elif napraviVertiklaniOtvori == 1 and razmerNachalnaDupka == 0 and len(leftVertikalDupki) > 0:
-        dup = leftVertikalDupki[0]
-        razmerNachalnaDupka = dup['r']*2
-        typeHiliV =  'V'   
+        razmerNachalnaDupka = dup['r']*2       
     elif napraviHorizontalniOtvori == 1 and razmerNachalnaDupka == 0 and len(rightHorizontDupki) > 0:
         dup = rightHorizontDupki[0]
         razmerNachalnaDupka = dup['r']*2  
-    elif napraviVertiklaniOtvori == 1 and razmerNachalnaDupka == 0 and len(rightVertikalDupki) > 0:
-        dup = rightVertikalDupki[0]
-        razmerNachalnaDupka = dup['r']*2
-        typeHiliV =  'V' 
     
     #if gcodeInProgress == 0 or TT=='':    
     # Logika za liniite na g-coda
-    if typeHiliV == 'V':
-        TT = izberi_instrument(instrumentiZaVerGlava, razmerNachalnaDupka, 0)
-    else:
-        zaFiks = 0
-        if dup.has_key('f'):
-            if dup['f'] == 1:
-                zaFiks = 1
-        TT = izberi_instrument(instrumentiZaHorizGlava, razmerNachalnaDupka, zaFiks)
+    zaFiks = 0
+    zaDibla = 0
+    if dup.has_key('f'):
+        if dup['f'] == 1:
+            zaFiks = 1
+    if dup['dib'] == 1:
+        zaDibla = 1
+        
+    TT = izberi_instrument(instrumentiZaHorizGlava, razmerNachalnaDupka, zaFiks, 0)
         
     HT = 'H'+TT[1]
     vzemiInstrument = 'N'+str(n10)+TT+'M06\n'
@@ -1555,16 +1515,13 @@ def suzdai_gcode_file():
         SD = "{0:.1f}".format(izberi_skorost(skorostZaInstrumenti, TT))
         
         # Vij kakuv instrument triabva da polzvash
-        if typeHiliV == 'V':
-            instrZaDupka = izberi_instrument(instrumentiZaVerGlava, dupka['r']*2, 0)
+        if dupka.has_key('f'):
+            instrZaDupka = izberi_instrument(instrumentiZaHorizGlava, dupka['r']*2, 1, 0)
+            if instrZaDupka == 'T11':
+                dulbochinaNaDupkata = dupka['defh']
         else:
-            if dupka.has_key('f'):
-                instrZaDupka = izberi_instrument(instrumentiZaHorizGlava, dupka['r']*2, 1)
-                if instrZaDupka == 'T11':
-                    dulbochinaNaDupkata = dupka['defh']
-            else:
-                instrZaDupka = izberi_instrument(instrumentiZaHorizGlava, dupka['r']*2, 0)
-            locDebelinaMaterial = 0
+            instrZaDupka = izberi_instrument(instrumentiZaHorizGlava, dupka['r']*2, 0, 0)
+        locDebelinaMaterial = 0
         
         purvonachaloZ = "{0:.3f}".format(locDebelinaMaterial + 5)   
         if typeHiliV == 'H':
@@ -1606,6 +1563,40 @@ def suzdai_gcode_file():
         n10 = n10 + 10
         fw.write(d3Line)
     
+    def gcode_lines_za_dibla(dupka, baza):
+        fw.write('kod za dibla tuk\n')
+        
+        global TT       
+        global n10 
+        
+        # Smeni instrumenta
+        TT = 'T20'
+        HT = 'H'+TT[1]
+        vzemiInstrument = 'N'+str(n10)+TT+'M06\n'
+        n10 = n10 + 10
+        fw.write(vzemiInstrument)
+        d4Line = 'N'+str(n10)+'G43'+HT+'\n'
+        fw.write(d4Line)
+        n10 = n10 + 10
+        
+        xKoordinata = dupka['x']
+        if baza == 'R':
+            razmeri_na_elementa = izbrani_elementi['R'].razmeri
+            if izbrani_elementi['RO'] == 0 or izbrani_elementi['RO'] == 2:
+                element_x = float(razmeri_na_elementa['x'])
+            else:
+                element_x = float(razmeri_na_elementa['y'])
+ 
+            xKoordinata = (PLOT_NA_MACHINA_X-element_x) + dupka['x']
+        
+        diplaLine = 'N'+str(n10)+'G00X'+str("{0:.3f}".format(xKoordinata))+'Y'+str("{0:.3f}".format(dupka['y']))+'\n'
+        n10 = n10 + 10
+        fw.write(diplaLine)
+        komandaZaDipla = 'N'+str(n10)+'M04\n'
+        n10 = n10 + 10
+        fw.write(komandaZaDipla)
+        
+        
     def postavi_pauza(bezopasno_z):
         global n10
         fw.write('N'+str(n10)+'G00X'+str("{0:.3f}".format(PLOT_NA_MACHINA_X/2))+'Y0.000Z'+str(bezopasno_z)+'\n')
@@ -1613,50 +1604,44 @@ def suzdai_gcode_file():
         fw.write('N'+str(n10)+'M5 M1\n')
         n10 = n10 + 10
         
-    
     debelinaMaterialLqvo = 0
     debelinaMaterialDqsno = 0
-    
-    if len(leftVertikalDupki) > 0:
-        razmerDet = izbrani_elementi['L'].razmeri
-        debelinaMaterialLqvo = float(razmerDet['h'])
-    if len(rightVertikalDupki) > 0:
-        razmerDet = izbrani_elementi['R'].razmeri
-        debelinaMaterialDqsno = float(razmerDet['h'])
         
     if napraviHorizontalniOtvori == 1:
         #Dupki - LQVA BAZA, HORIZONTAL
         for dupka in leftHorizontDupki:
             if t11instrument == 0:
                 gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
+                if dupka['dib'] == 1:
+                    gcode_lines_za_dibla(dupka, 'L')
             else:
                 if dupka.has_key('f'):
                     if dupka['f'] == 1:
                         gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
+                        if dupka['dib'] == 1:
+                            gcode_lines_za_dibla(dupka, 'L')                        
                 else:
                     gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
-                       
-    if napraviVertiklaniOtvori == 1:
-        #Dupki - LQVA BAZA, VERTIKAL
-        for dupka in leftVertikalDupki:
-            gcode_lines_za_dupka(dupka, 'V', 'L', debelinaMaterialLqvo)
+                    if dupka['dib'] == 1:
+                        gcode_lines_za_dibla(dupka, 'L')
         
     if napraviHorizontalniOtvori == 1:
         #Dupki - DQSNA BAZA, HORIZONTAL
         for dupka in rightHorizontDupki:
             if t11instrument == 0:
                 gcode_lines_za_dupka(dupka, 'H', 'R', debelinaMaterialDqsno)
+                if dupka['dib'] == 1:
+                    gcode_lines_za_dibla(dupka, 'R')
             else:
                 if dupka.has_key('f'):
                     if dupka['f'] == 1:
                         gcode_lines_za_dupka(dupka, 'H', 'R', debelinaMaterialDqsno)
+                        if dupka['dib'] == 1:
+                            gcode_lines_za_dibla(dupka, 'R')
                 else:
                     gcode_lines_za_dupka(dupka, 'H', 'R', debelinaMaterialDqsno)
-        
-    if napraviVertiklaniOtvori == 1:   
-        #Dupki - DQSNA BAZA, VERTIKAL    
-        for dupka in rightVertikalDupki:
-            gcode_lines_za_dupka(dupka, 'V', 'R', debelinaMaterialDqsno)
+                    if dupka['dib'] == 1:
+                        gcode_lines_za_dibla(dupka, 'R')
     
     if postaviPausa == 1:
         postavi_pauza(bezopasno_z)
@@ -1664,7 +1649,7 @@ def suzdai_gcode_file():
     # Kraq na G-code
     fw.close()
     
-    pokaji_stupki(napraviHorizontalniOtvori, napraviVertiklaniOtvori, len(leftHorizontDupki), len(leftVertikalDupki), len(rightHorizontDupki), len(rightVertikalDupki))
+    pokaji_stupki(len(leftHorizontDupki),len(rightHorizontDupki))
     
     gcodeInProgress = 1
 
@@ -2562,21 +2547,15 @@ def pokaji_redaktirai_window(side):
     # Narisuvai elementa na plota
     narisuvai_element_na_plota(izbrani_elementi[side], izbrani_elementi[side+'O'], side, rcanvas, 0, 0)
  
-def pokaji_stupki(horInd, verInd, numHDLB, numVDLB, numHDDB, numVDDB):
+def pokaji_stupki(numHDLB, numHDDB):
     line1 = u'Стъпка'
-    if numHDLB > 0 or numVDLB > 0:
+    if numHDLB > 0:
         line1 = line1 + u' ...Лява Б.--'
-        if horInd == 1:
-            line1 = line1 + u' Х:'+str(numHDLB)
-        if verInd == 1:
-            line1 = line1 + u' В:'+str(numVDLB)
+        line1 = line1 + u' Х:'+str(numHDLB)
             
-    if numHDDB > 0 or numVDDB > 0:
+    if numHDDB > 0:
         line1 = line1 + u' ...Дясна Б.--'
-        if horInd == 1:
-            line1 = line1 + u' Х:'+str(numHDDB)
-        if verInd == 1:
-            line1 = line1 + u' В:'+str(numVDDB)
+        line1 = line1 + u' Х:'+str(numHDDB)
             
     if line1 != u'Стъпка':
         stepsList.insert(END, line1)
