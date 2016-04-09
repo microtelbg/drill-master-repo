@@ -1269,13 +1269,13 @@ def zapishi_gcode_file():
     global gcodeInProgress
     
     saveFileName = asksaveasfilename(filetypes=(("GCode files", "*.txt"), ("All files", "*.*")))
-    if not saveFileName.endswith('.txt'):
-        saveFileName = saveFileName + u'.txt'
+    #if not saveFileName.endswith('.txt'):
+    saveFileName = saveFileName + u'.txt'
     
     tempFile = open("dm_temp_g_code.txt", "r")
     gCodeFile = open(saveFileName, "w")
     
-    gCodeFile.write("("+saveFileName+")\n")
+    #gCodeFile.write("("+saveFileName+")\n")
     for line in tempFile:
         gCodeFile.write(line)
          
@@ -1319,7 +1319,7 @@ def definirai_instrumenti(HorV):
     vgInst9Diam = float(hginstrument4EntryDiaValue.get())
     vgInst10Diam = float(hginstrument5EntryDiaValue.get())
     
-    return {'T6':vgInst6Diam, 'T7':vgInst7Diam, 'T8':vgInst8Diam, 'T9':vgInst9Diam, 'T10':vgInst10Diam}
+    return {'T1':vgInst6Diam, 'T2':vgInst7Diam, 'T3':vgInst8Diam, 'T4':vgInst9Diam, 'T5':vgInst10Diam}
 
 def definirai_skorosti():
     t6Skorost = float(hginstrument1EntrySkorostValue.get())
@@ -1328,7 +1328,7 @@ def definirai_skorosti():
     t9Skorost = float(hginstrument4EntrySkorostValue.get())
     t10Skorost = float(hginstrument5EntrySkorostValue.get())
     
-    return {'T6':t6Skorost,'T7':t7Skorost,'T8':t8Skorost,'T9':t9Skorost,'T10':t10Skorost,'T11':t6Skorost}
+    return {'T1':t6Skorost,'T2':t7Skorost,'T3':t8Skorost,'T4':t9Skorost,'T5':t10Skorost,'T11':t6Skorost}
 
 def izberi_skorost(skorostMap, instrument):
     skorost = 0
@@ -1343,7 +1343,7 @@ def izberi_instrument(instrMap, diametur, zaFiks, zaDibla):
     
     # Ako probivame fiksove i diameturka na T6 i T7 sa ravni, izberi T11 (2 instrumenta zaedno)
     if zaFiks == 1:
-        if instrMap['T6'] == instrMap['T7']:
+        if instrMap['T1'] == instrMap['T2']:
             instT = 'T11'
     
     if instT == 'INVALID':
@@ -1392,7 +1392,7 @@ def suzdai_gcode_file():
     global n10
     global TT 
     global gcodeInProgress    
-    bezopasno_z = "{0:.3f}".format(50.000) # Tova she bude izchesleno kato debelinata na materiala ot bxf + 20
+    bezopasno_z = "{0:.3f}".format(25.000) 
     instrumentiZaHorizGlava = definirai_instrumenti('H')
     
     lispvashDiametur = ima_li_lipsvash_instrument(instrumentiZaHorizGlava)
@@ -1463,7 +1463,6 @@ def suzdai_gcode_file():
     
     # Nameri instrument za purvata dupka
     razmerNachalnaDupka = 0
-    typeHiliV =  'H'
     if napraviHorizontalniOtvori == 1 and len(leftHorizontDupki) > 0:
         dup = leftHorizontDupki[0]
         razmerNachalnaDupka = dup['r']*2       
@@ -1474,12 +1473,9 @@ def suzdai_gcode_file():
     #if gcodeInProgress == 0 or TT=='':    
     # Logika za liniite na g-coda
     zaFiks = 0
-    zaDibla = 0
     if dup.has_key('f'):
         if dup['f'] == 1:
             zaFiks = 1
-    if dup['dib'] == 1:
-        zaDibla = 1
         
     TT = izberi_instrument(instrumentiZaHorizGlava, razmerNachalnaDupka, zaFiks, 0)
         
@@ -1497,7 +1493,13 @@ def suzdai_gcode_file():
     
         # Nachalo na g-code
         fw.write('N10G00G21G17G90G40G49G80\n')    
-        fw.write('N20G71G91.1\n')  
+        if napraviGCodeZaDibli == 1:
+            fw.write('N20M701\n')
+            n10 = n10 + 10
+            fw.write('N30G71G91.1\n')  
+        else:
+            fw.write('N20G71G91.1\n') 
+
         
     fw.write(vzemiInstrument)
     fw.write(predpazvaneNaZ)
@@ -1523,9 +1525,7 @@ def suzdai_gcode_file():
             instrZaDupka = izberi_instrument(instrumentiZaHorizGlava, dupka['r']*2, 0, 0)
         locDebelinaMaterial = 0
         
-        purvonachaloZ = "{0:.3f}".format(locDebelinaMaterial + 5)   
-        if typeHiliV == 'H':
-            purvonachaloZ = "{0:.3f}".format(locDebelinaMaterial + 10)
+        purvonachaloZ = "{0:.3f}".format(locDebelinaMaterial + 15)
             
         if instrZaDupka != TT:  
             # Smeni instrumenta
@@ -1564,7 +1564,7 @@ def suzdai_gcode_file():
         fw.write(d3Line)
     
     def gcode_lines_za_dibla(dupka, baza):
-        fw.write('kod za dibla tuk\n')
+        fw.write('(kod za dibla tuk)\n')
         
         global TT       
         global n10 
@@ -1592,10 +1592,12 @@ def suzdai_gcode_file():
         diplaLine = 'N'+str(n10)+'G00X'+str("{0:.3f}".format(xKoordinata))+'Y'+str("{0:.3f}".format(dupka['y']))+'\n'
         n10 = n10 + 10
         fw.write(diplaLine)
-        komandaZaDipla = 'N'+str(n10)+'M04\n'
+        komandaZaDipla1 = 'N'+str(n10)+'M702\n'
         n10 = n10 + 10
-        fw.write(komandaZaDipla)
-        
+        fw.write(komandaZaDipla1)
+        komandaZaDipla2 = 'N'+str(n10)+'G04 P1\n'
+        n10 = n10 + 10
+        fw.write(komandaZaDipla2)
         
     def postavi_pauza(bezopasno_z):
         global n10
@@ -1612,17 +1614,17 @@ def suzdai_gcode_file():
         for dupka in leftHorizontDupki:
             if t11instrument == 0:
                 gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
-                if dupka['dib'] == 1:
+                if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
                     gcode_lines_za_dibla(dupka, 'L')
             else:
                 if dupka.has_key('f'):
                     if dupka['f'] == 1:
                         gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
-                        if dupka['dib'] == 1:
+                        if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
                             gcode_lines_za_dibla(dupka, 'L')                        
                 else:
                     gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
-                    if dupka['dib'] == 1:
+                    if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
                         gcode_lines_za_dibla(dupka, 'L')
         
     if napraviHorizontalniOtvori == 1:
@@ -1630,7 +1632,7 @@ def suzdai_gcode_file():
         for dupka in rightHorizontDupki:
             if t11instrument == 0:
                 gcode_lines_za_dupka(dupka, 'H', 'R', debelinaMaterialDqsno)
-                if dupka['dib'] == 1:
+                if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
                     gcode_lines_za_dibla(dupka, 'R')
             else:
                 if dupka.has_key('f'):
@@ -1640,7 +1642,7 @@ def suzdai_gcode_file():
                             gcode_lines_za_dibla(dupka, 'R')
                 else:
                     gcode_lines_za_dupka(dupka, 'H', 'R', debelinaMaterialDqsno)
-                    if dupka['dib'] == 1:
+                    if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
                         gcode_lines_za_dibla(dupka, 'R')
     
     if postaviPausa == 1:
@@ -2606,16 +2608,16 @@ hginstrument5EntryDiaValue = StringVar()
 hginstrument5EntrySkorostValue = StringVar()
 
 # Default values (she doidat posle of file)
-hginstrument1EntryDiaValue.set(instrumentiOtConfig['T6'][0])
-hginstrument1EntrySkorostValue.set(instrumentiOtConfig['T6'][1])
-hginstrument2EntryDiaValue.set(instrumentiOtConfig['T7'][0])
-hginstrument2EntrySkorostValue.set(instrumentiOtConfig['T7'][1])
-hginstrument3EntryDiaValue.set(instrumentiOtConfig['T8'][0])
-hginstrument3EntrySkorostValue.set(instrumentiOtConfig['T8'][1])
-hginstrument4EntryDiaValue.set(instrumentiOtConfig['T9'][0])
-hginstrument4EntrySkorostValue.set(instrumentiOtConfig['T9'][1])
-hginstrument5EntryDiaValue.set(instrumentiOtConfig['T10'][0])
-hginstrument5EntrySkorostValue.set(instrumentiOtConfig['T10'][1])
+hginstrument1EntryDiaValue.set(instrumentiOtConfig['T1'][0])
+hginstrument1EntrySkorostValue.set(instrumentiOtConfig['T1'][1])
+hginstrument2EntryDiaValue.set(instrumentiOtConfig['T2'][0])
+hginstrument2EntrySkorostValue.set(instrumentiOtConfig['T2'][1])
+hginstrument3EntryDiaValue.set(instrumentiOtConfig['T3'][0])
+hginstrument3EntrySkorostValue.set(instrumentiOtConfig['T3'][1])
+hginstrument4EntryDiaValue.set(instrumentiOtConfig['T4'][0])
+hginstrument4EntrySkorostValue.set(instrumentiOtConfig['T4'][1])
+hginstrument5EntryDiaValue.set(instrumentiOtConfig['T5'][0])
+hginstrument5EntrySkorostValue.set(instrumentiOtConfig['T5'][1])
 
 genHorizontOtvoriGCodeValue = IntVar()
 genDibliGCodeValue = IntVar()
