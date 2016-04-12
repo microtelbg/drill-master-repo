@@ -104,14 +104,14 @@ detailiLabelText = u'Детайли'
 ns = {'blum' : 'http://www.blum.com/bxf'}
 mashtab = 0.45
 
-PLOT_NA_MACHINA_X = 1504
+PLOT_NA_MACHINA_X = 1510
 PLOT_NA_MACHINA_Y = 600
 
 ''' ***************************************************************************
 *** Global Variables
 *************************************************************************** '''
 detNo = 1
-bezopasno_z = "{0:.3f}".format(50.000) # Tova she bude izchesleno kato debelinata na materiala ot bxf + 20
+bezopasno_z = "{0:.3f}".format(25.000) # Tova she bude izchesleno kato debelinata na materiala ot bxf + 20
 TT = '' # instrumenta v momenta T1, T2, etc.
 n10 = 30
 gcodeInProgress = 0
@@ -1269,13 +1269,15 @@ def zapishi_gcode_file():
     global gcodeInProgress
     
     saveFileName = asksaveasfilename(filetypes=(("GCode files", "*.txt"), ("All files", "*.*")))
-    #if not saveFileName.endswith('.txt'):
-    saveFileName = saveFileName + u'.txt'
+    if not saveFileName.endswith('.txt'):
+        saveFileName = saveFileName + u'.txt'
+        
+    baseFileName = os.path.basename(saveFileName)
     
     tempFile = open("dm_temp_g_code.txt", "r")
     gCodeFile = open(saveFileName, "w")
     
-    #gCodeFile.write("("+saveFileName+")\n")
+    gCodeFile.write("("+baseFileName+")\n")
     for line in tempFile:
         gCodeFile.write(line)
          
@@ -1392,7 +1394,7 @@ def suzdai_gcode_file():
     global n10
     global TT 
     global gcodeInProgress    
-    bezopasno_z = "{0:.3f}".format(25.000) 
+    #bezopasno_z = "{0:.3f}".format(25.000) 
     instrumentiZaHorizGlava = definirai_instrumenti('H')
     
     lispvashDiametur = ima_li_lipsvash_instrument(instrumentiZaHorizGlava)
