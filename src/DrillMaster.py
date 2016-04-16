@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import time, os
+import time, os, gettext
+gettext.install('messages', '../i18n', True, None, None)
 ## dd/mm/yyyy format
 
 from Tkinter import *
@@ -17,10 +18,10 @@ except ImportError:
 ''' ***************************************************************************
 *** Labels
 *************************************************************************** '''
-rotateButtonText = u'Завърти'
-removeButtonText = u'Премахни'
-editButtonText = u'Редактирай'
-pripluzniButtonText = u'<-- Приплъзни -->'
+rotateButtonText = _('Rotate')
+removeButtonText = _('Remove')
+editButtonText = _('Edit')
+pripluzniButtonText = _('<-- Slide -->')
 orLabelText = u' или '
 openBXFFileButtonText = u'Отвори BXF файл'
 createButtonText = u'Създай елемент'
