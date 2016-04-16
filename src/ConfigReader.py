@@ -209,15 +209,15 @@ def sort_detail_list(detaili):
 def write_instruments(verIns, horIns, skorosti):
     configFileW = open("rm_instrumenti.config", "w") 
 
-    newLine = 'T6='+str(horIns['T6'])+';'+str(skorosti['T6'])+'\n'
+    newLine = 'T1='+str(horIns['T1'])+';'+str(skorosti['T1'])+'\n'
     configFileW.write(newLine)
-    newLine = 'T7='+str(horIns['T7'])+';'+str(skorosti['T7'])+'\n'
+    newLine = 'T2='+str(horIns['T2'])+';'+str(skorosti['T2'])+'\n'
     configFileW.write(newLine)
-    newLine = 'T8='+str(horIns['T8'])+';'+str(skorosti['T8'])+'\n'
+    newLine = 'T3='+str(horIns['T3'])+';'+str(skorosti['T3'])+'\n'
     configFileW.write(newLine)
-    newLine = 'T9='+str(horIns['T9'])+';'+str(skorosti['T9'])+'\n'
+    newLine = 'T4='+str(horIns['T4'])+';'+str(skorosti['T4'])+'\n'
     configFileW.write(newLine)
-    newLine = 'T10='+str(horIns['T10'])+';'+str(skorosti['T10'])+'\n'
+    newLine = 'T5='+str(horIns['T5'])+';'+str(skorosti['T5'])+'\n'
     configFileW.write(newLine)
 
     configFileW.close()
