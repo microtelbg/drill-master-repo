@@ -1482,7 +1482,7 @@ def suzdai_gcode_file():
         
     TT = izberi_instrument(instrumentiZaHorizGlava, razmerNachalnaDupka, zaFiks, 0)
         
-    HT = 'H'+TT[1]
+    HT = 'H'+TT[1:]
     vzemiInstrument = 'N'+str(n10)+TT+'M06\n'
     n10 = n10 + 10
     predpazvaneNaZ = 'N'+str(n10)+'G00G43Z'+str(bezopasno_z)+HT+'\n'
@@ -1533,7 +1533,7 @@ def suzdai_gcode_file():
         if instrZaDupka != TT:  
             # Smeni instrumenta
             TT = instrZaDupka
-            HT = 'H'+TT[1]
+            HT = 'H'+TT[1:]
             SD = "{0:.1f}".format(izberi_skorost(skorostZaInstrumenti, TT))
             vzemiInstrument = 'N'+str(n10)+TT+'M06\n'
             n10 = n10 + 10
@@ -1574,7 +1574,7 @@ def suzdai_gcode_file():
         
         # Smeni instrumenta
         TT = 'T20'
-        HT = 'H'+TT[1]
+        HT = 'H'+TT[1:]
         vzemiInstrument = 'N'+str(n10)+TT+'M06\n'
         n10 = n10 + 10
         fw.write(vzemiInstrument)
@@ -1623,8 +1623,8 @@ def suzdai_gcode_file():
                 if dupka.has_key('f'):
                     if dupka['f'] == 1:
                         gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
-                        if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
-                            gcode_lines_za_dibla(dupka, 'L')                        
+                    if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
+                        gcode_lines_za_dibla(dupka, 'L')                        
                 else:
                     gcode_lines_za_dupka(dupka, 'H', 'L', debelinaMaterialLqvo)
                     if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
@@ -1641,8 +1641,8 @@ def suzdai_gcode_file():
                 if dupka.has_key('f'):
                     if dupka['f'] == 1:
                         gcode_lines_za_dupka(dupka, 'H', 'R', debelinaMaterialDqsno)
-                        if dupka['dib'] == 1:
-                            gcode_lines_za_dibla(dupka, 'R')
+                    if dupka['dib'] == 1:
+                        gcode_lines_za_dibla(dupka, 'R')
                 else:
                     gcode_lines_za_dupka(dupka, 'H', 'R', debelinaMaterialDqsno)
                     if napraviGCodeZaDibli == 1 and dupka['dib'] == 1:
